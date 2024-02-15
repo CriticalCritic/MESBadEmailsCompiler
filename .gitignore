@@ -1,0 +1,5 @@
+# ignore data files
+*.BAD
+
+# ignore output excel files
+*.xlsx

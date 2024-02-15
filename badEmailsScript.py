@@ -11,7 +11,7 @@ from pandas import DataFrame
 def readFiles(folder, key):
     '''
     Record the next line after the first occurence of the key in each .bad file in the selected folder
-    Intended to log all "bad emails"
+    Intended to log all unique "bad emails" (no duplicates)
 
     Average Case: O(n*log(m))
     Worst Case: O(n*m)
@@ -20,6 +20,7 @@ def readFiles(folder, key):
 
     Input:
     folder : path to open files from
+    key : phrase consistant for all files to locate bad email
 
     Output:
     set of bad emails 
@@ -56,24 +57,22 @@ def readFiles(folder, key):
                     except IndexError:
                         pass
                     break
-
-                # else:
-                #     # key not present in file
-                #     raise LookupError("Emails not available")
                 
-        # else:
-        #     # wrong file type
-        #     raise TypeError("A file with a format other than '.bad' was selected")
+        else:
+            # wrong file type
+            raise TypeError("A file with a format other than '.bad' was selected")
 
     return emailSet
 
 
-def printToExcel(emailSet):
+def printToExcel(inSet, name):
     '''
     Write each item in set to excel file
+    Will not overrite existing files
 
     Input:
     emailSet : set of bad emails
+    name : name of create excel file
 
     Output:
     if completed excel file: true, else: false
@@ -81,9 +80,9 @@ def printToExcel(emailSet):
 
     try: 
         # create data frame with items of function input
-        df = DataFrame(list(emailSet))
+        df = DataFrame(list(inSet))
         # create excel file from data frame
-        df.to_excel('MES_Bad_Emails.xlsx', sheet_name='sheet1', index=False)
+        df.to_excel(name, index=False)
     except:
         return False
 
@@ -91,6 +90,6 @@ def printToExcel(emailSet):
     
 
 if __name__=="__main__": 
-    badEmails = readFiles("Bad Emails", "Delivery to the following recipients failed.")
-    # print(badEmails)
-    print(printToExcel(badEmails))
+    badEmails = readFiles("Bad Emails", 'Delivery to the following recipients failed.')
+    # print(badEmails) # TESTING
+    print(printToExcel(badEmails, 'MES_Bad_Emails.xlsx'))
