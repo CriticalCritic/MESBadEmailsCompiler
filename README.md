@@ -2,7 +2,7 @@
 
 ## Summary
 
-Create an excel file logging all the unique (no duplicates) "bad emails" given a folder of .BAD files
+Create an excel file logging all the unique (no duplicates) "bad emails", their # of occurences, and their subject lines along with ocurences of those given a folder of .BAD files
 
 
 ## How to run

@@ -8,10 +8,9 @@ from pathlib import Path
 # create excel file type
 from pandas import DataFrame
 
-def readFiles(folder, key):
+def readFiles(folder):
     '''
-    Record the next line after the first occurence of the key in each .bad file in the selected folder
-    Intended to log all unique "bad emails" (no duplicates)
+    Record unique (no duplicates) bad emails, their # of occurences, and their unique subject lines along with thier # of occurences for all .bad file in the selected folder
 
     Average Case: O(n*log(m))
     Worst Case: O(n*m)
@@ -20,18 +19,18 @@ def readFiles(folder, key):
 
     Input:
     folder : path to open files from
-    key : phrase consistant for all files to locate bad email
 
     Output:
-    set of bad emails 
+    Dictionary of bad emails and # of occurences
     '''
 
     # no duplicates + cut down run time
-    emailSet = set(())
+    emailDict = {}
 
     # list all files in folder
     files = Path(folder).glob('*') 
 
+    # no files or folder
     if not files:
         raise ValueError("No files in folder selected or folder doesn't exist")
 
@@ -46,28 +45,43 @@ def readFiles(folder, key):
             # for each line in text
             for x in range(len(text)):
                 # check line for key
-                # if key found in file
-                if key in text[x]:
-                    try:
-                        # add formatted email to set
-                        emailSet.add(text[x + 2].replace(" ", ""))
-                        # end current file search
-                        break 
-                    # key found on last line of page somehow
-                    except IndexError:
-                        pass
+                if 'This is an automatically generated Delivery Status Notification.' in text[x]:
+                    # locate email from remaining text
+                    for i in range(len(text) - x):
+                        # emial found in line
+                        if '@' in text[x + i]:
+                            # add formatted email to dict
+                            if text[x + i].replace(" ", "") in emailDict:
+                                emailDict[text[x + i].replace(" ", "")][0] += 1
+                            else:
+                                emailDict[text[x + i].replace(" ", "")] = [1, {}]
+                            
+                            # locate subject from remaining text
+                            for n in range(len(text) - x - i):
+                                if 'Subject:' in text[x + i + n]:
+                                    # if subject already associated with email
+                                    if text[x + i + n] in emailDict[text[x + i].replace(" ", "")][1]:
+                                        emailDict[text[x + i].replace(" ", "")][1][text[x + i + n]] += 1
+                                    else: 
+                                        emailDict[text[x + i].replace(" ", "")][1][text[x + i + n]] = 1
+                            break
+
+                        # record associated message
+                        else:
+                            pass
+
                     break
                 
         else:
             # wrong file type
             raise TypeError("A file with a format other than '.bad' was selected")
 
-    return emailSet
+    return emailDict
 
 
-def printToExcel(inSet, name):
+def printToExcel(inDict, name):
     '''
-    Write each item in set to excel file
+    Write each item in Disctionary to excel file
     Will not overrite existing files
 
     Input:
@@ -78,9 +92,17 @@ def printToExcel(inSet, name):
     if completed excel file: true, else: false
     '''
 
+    #format data
+    data = {"Emails":[], "Count":[], "Subjects":[]}
+    for x in inDict:
+        # sort into catagories
+        data["Emails"].append(x)
+        data["Count"].append(inDict[x][0])
+        data["Subjects"].append(inDict[x][1])
+
     try: 
         # create data frame with items of function input
-        df = DataFrame(list(inSet))
+        df = DataFrame(data)
         # create excel file from data frame
         df.to_excel(name, index=False)
     except:
@@ -90,6 +112,6 @@ def printToExcel(inSet, name):
     
 
 if __name__=="__main__": 
-    badEmails = readFiles("Bad Emails", 'Delivery to the following recipients failed.')
+    badEmails = readFiles("Bad Emails")
     # print(badEmails) # TESTING
     print(printToExcel(badEmails, 'MES_Bad_Emails.xlsx'))
