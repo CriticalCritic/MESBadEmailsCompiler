@@ -9,5 +9,6 @@ Create an excel file logging all the unique (no duplicates) "bad emails" given a
 
 - Have Python installed
 - Run "pip install pandas" and any other packages the computer is missing
+- Place the .BAD files in the "Bad Emails" folder that must stay in the same encompassing folder as the python file
 - Run the python file through the command line or an ide such as pyCharm
 
