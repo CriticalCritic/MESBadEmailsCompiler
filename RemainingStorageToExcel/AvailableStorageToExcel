@@ -1,0 +1,39 @@
+'''
+Available Storage To Excel
+Daniel Olevsky
+'''
+
+from shutil import disk_usage
+import datetime
+import pandas as pd
+from os.path import exists
+
+path = "C:"
+filename = 'disk_usage.xlsx'
+
+# Get the disk usage
+disk_usage = disk_usage(path)
+
+# Calculate the storage left in GB rounded to two decimal places
+storage_left = round(disk_usage.free / (1024.0 ** 3), 2)
+
+# Get the time and trim to 3 milliseconds
+time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+try:
+    # Create DataFrame with data
+    df = pd.DataFrame({'Time': [time], 'Storage Left (GB)': [storage_left]})
+
+    # Write the DataFrame to an Excel file
+    if exists(filename):
+        # Add new data to existing
+        df_existing = pd.read_excel(filename)
+        df = pd.concat([df_existing, df])
+
+    # DataFrame to Excel file
+    df.to_excel(filename, index=False)
+
+except:
+    # Log error occurence
+    errorTime = datetime.datetime.now().strftime('%Y-%m-%d %H.%M.%S.%f')[:-3]
+    errorFile = open('Error ' + errorTime, 'w')
+    errorFile.write('Error at ' + str(errorTime) + ' with storage ' + str(storage_left) + '\nMake sure excel file is closed')

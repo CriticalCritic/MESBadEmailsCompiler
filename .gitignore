@@ -1,5 +1,11 @@
 # ignore data files
 *.BAD
+*.BDP
+*.BDR
 
-# ignore output excel files
+# ignore sensitive data
+*.html
+
+# ignore output data
 *.xlsx
+*.csv
