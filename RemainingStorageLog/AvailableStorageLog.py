@@ -8,6 +8,7 @@ Daniel Olevsky
 
 from shutil import disk_usage
 import datetime
+import socket
 import csv
 from os.path import exists
 
@@ -36,41 +37,49 @@ def errorLog(location, storage_left):
 
     Input:
     location: location of error log creation
-    storage_left : Available space on machine at time of error
+    storage_left : Available space on machine in each drive at time of error
     '''
     # Get the time and trim to 3 milliseconds
     errorTime = datetime.datetime.now().strftime('%Y-%m-%d %H.%M.%S.%f')[:-3] + '.txt'
     # Create unique file
     errorFile = open(str(location) + 'Error_' + errorTime, 'w')
     # Log error occurence
-    errorFile.write('Error at ' + str(errorTime) + ' with storage ' + str(storage_left) + '\nMake sure csv file is closed')
+    errorFile.write('Error at ' + str(errorTime) + ' with ' + str(storage_left) + '\nMake sure csv file is closed')
 
-def AvailabelStorageLog(path, filename, location, maxLog):
+def AvailabelStorageLog(location, maxLog):
     '''
     Create or update a CSV file with an entry of the current available storage and time
 
     Input:
-    path : The storage to be checked ('C:' for whole computer)
-    filename : name of CSV file log to create or modify
     location : location of CSV file to make/modify and possible new error files; must end with '\\' unless blank
     maxLog : max number of entries to be kept; oldest deleted first
     '''
+    # File name starts with device name
+    filename = str(socket.gethostname()) + '_disk_usage.csv'
+    fields = ['Time M/D/Y']
     file = location + filename
 
-    # Get the disk usage
-    disk_use = disk_usage(path)
-
-    # Calculate the storage left in GB rounded to two decimal places
-    storage_left = round(disk_use.free / (1024.0 ** 3), 2)
+    # Identify hardware disks
+    # In ASCII, 65 == 'A' and 91 == 'Z'
+    # Excludes network drives by not checking past 'I' (73)
+    drives = [chr(x) + ":" for x in range(65,73) if exists(chr(x) + ":")]
 
     # Get the time and trim to nearest minute
     time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
 
-    try:
-        # Prepare for writing
-        data = {'Time M/D/Y': time, 'Storage Left (GB)': storage_left}
-        fields = ['Time M/D/Y', 'Storage Left (GB)']
+    data = {str(fields[0]): time}
 
+    # Storage for each available disk
+    for x in drives:
+        # Add drive to output format
+        fields.append(x + ' (GB) Free/Total')
+
+        disk_space = disk_usage(x)
+
+        # Store the storage left for given drive in GB rounded to two decimal places
+        data[fields[-1]] = str(round(disk_space.free / (1024.0 ** 3), 2)) + ' / ' + str(round(disk_space.total / (1024.0 ** 3), 2))
+
+    try:        
         # Write the data to a CSV file
         if exists(file):
 
@@ -103,15 +112,17 @@ def AvailabelStorageLog(path, filename, location, maxLog):
 
     except:
         # Create error file
-        errorLog(location, storage_left)
+        errorLog(location, data)
 
-def main():
-    path = "C:"
-    filename = 'disk_usage.csv' 
-    loc = '' 
-    maxLog = 60
+# def main():
+#     path = "C:"
+#     filename = 'disk_usage.csv' 
+#     loc = ''
+#     maxLog = 60
 
-    AvailabelStorageLog(path, filename, loc, maxLog)
+#     AvailabelStorageLog(path, filename, loc, maxLog)
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
+        
+AvailabelStorageLog('', 60)
