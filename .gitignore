@@ -5,6 +5,9 @@
 
 # ignore sensitive data
 *.html
+*.xml
+loginfo.py
+__pycache__
 
 # ignore output data
 *.xlsx

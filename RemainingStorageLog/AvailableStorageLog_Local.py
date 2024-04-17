@@ -115,8 +115,6 @@ def AvailabelStorageLog(location, maxLog):
         errorLog(location, data)
 
 # def main():
-#     path = "C:"
-#     filename = 'disk_usage.csv' 
 #     loc = ''
 #     maxLog = 60
 
